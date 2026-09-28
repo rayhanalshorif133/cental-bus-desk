@@ -8,7 +8,8 @@ const DEFAULT_COUNTERS = [
   { id: 6, name: "Cox's Bazar Counter", code: "CXB-06", city: "Cox's Bazar", location: "Kolatoli Beach Road, Hotel Zone", phone: "01711-200106", manager: "Mahbub Alam", status: "Active" },
   { id: 7, name: "Sylhet Kadamtoli Counter", code: "SYL-07", city: "Sylhet", location: "Kadamtoli Central Bus Stand", phone: "01711-200107", manager: "Faruk Hossain", status: "Active" },
   { id: 8, name: "Rajshahi Railgate Counter", code: "RAJ-08", city: "Rajshahi", location: "Railway Gate, Station Road", phone: "01711-200108", manager: "Sohail Rana", status: "Active" },
-  { id: 9, name: "Bogura Satmatha Counter", code: "BOG-09", city: "Bogura", location: "Satmatha City Circle, Bogura", phone: "01711-200109", manager: "Anwar Parvez", status: "Active" }
+  { id: 9, name: "Bogura Satmatha Counter", code: "BOG-09", city: "Bogura", location: "Satmatha City Circle, Bogura", phone: "01711-200109", manager: "Anwar Parvez", status: "Active" },
+  { id: 10, name: "Khulna Sonadanga Counter", code: "KHU-10", city: "Khulna", location: "Sonadanga Central Bus Terminal", phone: "01711-200110", manager: "Tariqul Islam", status: "Active" }
 ];
 
 const DEFAULT_TRIPS = [
@@ -206,17 +207,32 @@ const DEFAULT_TRIPS = [
     status: "Scheduled",
     driverName: "Sultan Mahmud",
     contact: "01819-556633"
+  },
+  {
+    id: "TRIP-114",
+    busNo: "DM-BA-25-3399",
+    busName: "Tungipara Express Scania",
+    type: "AC Multi-Axle",
+    fromCounterId: 10, // Khulna
+    destination: "Dhaka (Sayedabad)",
+    departureTime: "09:45 PM",
+    totalSeats: 36,
+    bookedSeats: 24,
+    fare: 1300,
+    status: "Scheduled",
+    driverName: "Tariqul Islam",
+    contact: "01819-771122"
   }
 ];
 
-// 9 Counter Accounts + Super Admin Account
+// 10 Counter Accounts + Super Admin Account
 const COUNTER_ACCOUNTS = [
   {
     id: "admin",
     role: "admin",
     counterId: null,
     name: "Central Control HQ",
-    counterName: "All 9 Terminals",
+    counterName: "All 10 Terminals",
     email: "admin@buscentral.com",
     password: "admin123",
     designation: "Fleet Operation Director"
@@ -318,6 +334,17 @@ const COUNTER_ACCOUNTS = [
     city: "Bogura",
     email: "bogura@buscentral.com",
     password: "bogura123",
+    designation: "Terminal Sales Manager"
+  },
+  {
+    id: "sales-10",
+    role: "sales",
+    counterId: 10,
+    name: "Tariqul Islam",
+    counterName: "Khulna Sonadanga Counter",
+    city: "Khulna",
+    email: "khulna@buscentral.com",
+    password: "khulna123",
     designation: "Terminal Sales Manager"
   }
 ];

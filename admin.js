@@ -137,7 +137,7 @@ function renderAdminMetrics() {
         </span>
       </div>
       <div class="mt-2">
-        <h3 class="text-2xl font-black text-slate-900">${adminState.counters.length} / 9 কাউন্টার</h3>
+        <h3 class="text-2xl font-black text-slate-900">${adminState.counters.length} / 10 কাউন্টার</h3>
         <p class="text-xs text-emerald-600 font-semibold mt-1 flex items-center gap-1.5">
           <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
           সকল কাউন্টার ১০০% সক্রিয় রয়েছে
@@ -180,7 +180,7 @@ function renderAdminMetrics() {
       <div class="mt-2">
         <h3 class="text-2xl font-black text-slate-900">৳ ${metrics.totalRevenue.toLocaleString()}</h3>
         <p class="text-xs text-slate-500 mt-1">
-          ৯টি কাউন্টার থেকে সংগৃহীত মোট টিকেট আয়
+          ১০টি কাউন্টার থেকে সংগৃহীত মোট টিকেট আয়
         </p>
       </div>
     </div>
@@ -194,13 +194,13 @@ function renderAdminContent() {
   if (adminState.activeTab === 'overview') {
     container.innerHTML = `
       <div class="space-y-6">
-        <!-- Live 9 Counters Grid -->
+        <!-- Live 10 Counters Grid -->
         <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
             <div>
               <h2 class="text-lg font-black text-slate-900 flex items-center gap-2">
                 <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                ৯টি কাউন্টারের আজকের লাইভ বাস মনিটরিং (All 9 Terminals Live Audit)
+                ১০টি কাউন্টারের আজকের লাইভ বাস মনিটরিং (All 10 Terminals Live Audit)
               </h2>
               <p class="text-xs text-slate-500 mt-0.5">কোন কাউন্টার থেকে কখন কোন বাস যাচ্ছে এবং কতটি সিট খালি আছে তার লাইভ তালিকা</p>
             </div>
@@ -249,7 +249,7 @@ function renderAdminContent() {
 
             <div class="flex flex-wrap items-center gap-3">
               <select id="adminCounterFilterSelect" onchange="filterAdminTripsByCounter(this.value)" class="text-xs font-bold bg-slate-50 border border-slate-300 text-slate-700 rounded-xl px-3 py-2 outline-none focus:border-indigo-500">
-                <option value="all" ${adminState.selectedCounterFilter === 'all' ? 'selected' : ''}>সব ৯টি কাউন্টার (All Counters)</option>
+                <option value="all" ${adminState.selectedCounterFilter === 'all' ? 'selected' : ''}>সব ১০টি কাউন্টার (All Counters)</option>
                 ${adminState.counters.map(c => `
                   <option value="${c.id}" ${adminState.selectedCounterFilter == c.id ? 'selected' : ''}>${c.id}. ${c.name} (${c.city})</option>
                 `).join('')}
@@ -574,7 +574,7 @@ function renderAdminPerformanceReport() {
     <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
       <div class="flex items-center justify-between pb-3 border-b border-slate-100">
         <div>
-          <h3 class="text-lg font-black text-slate-900">৯টি টার্মিনাল কালেকশন ও অকুপেন্সি রিপোর্ট</h3>
+          <h3 class="text-lg font-black text-slate-900">১০টি টার্মিনাল কালেকশন ও অকুপেন্সি রিপোর্ট</h3>
           <p class="text-xs text-slate-500">টার্মিনাল ভিত্তিক টিকেট বিক্রয় ও যাত্রীর হার</p>
         </div>
       </div>
