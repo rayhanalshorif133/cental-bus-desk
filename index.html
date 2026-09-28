@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Central Bus Desk - Portal Gateway</title>
+  
+  <!-- Instant Smart Redirection Script -->
+  <script>
+    (function() {
+      try {
+        const userStr = localStorage.getItem('bus_user_v1');
+        const token = localStorage.getItem('bus_auth_token');
+        if (token && userStr) {
+          const user = JSON.parse(userStr);
+          if (user.role === 'admin') {
+            window.location.href = "admin-dashboard.html";
+            return;
+          } else {
+            window.location.href = "sales-dashboard.html";
+            return;
+          }
+        }
+      } catch (e) {}
+      window.location.href = "login.html";
+    })();
+  </script>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body class="bg-slate-900 min-h-screen flex items-center justify-center p-4 text-white antialiased">
+  <div class="text-center space-y-4">
+    <div class="w-16 h-16 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-2xl mx-auto animate-pulse">
+      <i class="fas fa-bus-simple"></i>
+    </div>
+    <h2 class="text-xl font-black">CENTRAL BUS DESK PORTAL</h2>
+    <p class="text-xs text-slate-400">রিডাইরেক্ট হচ্ছে... (Redirecting to Login)</p>
+    <div class="flex items-center justify-center gap-3 pt-4">
+      <a href="login.html" class="px-4 py-2 rounded-xl bg-indigo-600 text-xs font-bold hover:bg-indigo-700">Login Page</a>
+      <a href="admin-dashboard.html" class="px-4 py-2 rounded-xl bg-slate-800 text-xs font-bold hover:bg-slate-700">Admin Dashboard</a>
+      <a href="sales-dashboard.html" class="px-4 py-2 rounded-xl bg-amber-600 text-xs font-bold hover:bg-amber-700">Sales Dashboard</a>
+    </div>
+  </div>
+</body>
+</html>

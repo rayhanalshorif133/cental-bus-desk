@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Super Admin Dashboard - 9 Terminals Fleet Monitoring</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              900: '#312e81',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Inter', 'Hind Siliguri', sans-serif;
+    }
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body class="bg-slate-100/90 text-slate-800 antialiased min-h-screen flex flex-col">
+
+  <!-- Top Navigation Bar -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
+    <div class="px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
+      
+      <!-- Brand Logo -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shadow-md shadow-indigo-200 text-lg">
+          <i class="fas fa-bus-simple"></i>
+        </div>
+        <div>
+          <h1 class="font-black text-slate-900 text-base leading-tight tracking-tight flex items-center gap-2">
+            CENTRAL BUS CONTROL HQ
+            <span class="text-[10px] bg-indigo-100 text-indigo-700 font-bold px-2 py-0.5 rounded-full">Super Admin</span>
+          </h1>
+          <p class="text-[11px] text-slate-400 font-medium">সারাদেশের ৯টি কাউন্টারের সেন্ট্রাল মনিটরিং</p>
+        </div>
+      </div>
+
+      <!-- User Profile & Action -->
+      <div class="flex items-center gap-3">
+        
+        <!-- Link to Sales Portal for testing -->
+        <a 
+          href="sales-dashboard.html" 
+          class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-xl text-xs font-bold transition"
+        >
+          <i class="fas fa-ticket text-amber-600"></i> সেলস ড্যাশবোর্ড দেখুন
+        </a>
+
+        <!-- Admin Badge -->
+        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> SUPER ADMIN HQ
+        </div>
+
+        <!-- User Info -->
+        <div class="flex items-center gap-2 pl-2 border-l border-slate-200">
+          <div class="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-xs">
+            <i class="fas fa-shield-halved"></i>
+          </div>
+          <span id="adminUserName" class="hidden md:inline text-xs font-bold text-slate-800">Super Admin</span>
+        </div>
+
+        <!-- Logout Button -->
+        <button 
+          onclick="adminLogout()" 
+          title="Sign Out" 
+          class="px-3 py-1.5 rounded-xl border border-slate-200 hover:border-rose-300 text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition flex items-center gap-1.5 text-xs font-bold"
+        >
+          <i class="fas fa-right-from-bracket"></i>
+          <span>লগআউট</span>
+        </button>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <div class="flex-1 flex overflow-hidden">
+    
+    <!-- Sidebar -->
+    <aside class="hidden lg:flex flex-col w-64 bg-white border-r border-slate-200 p-4 shrink-0">
+      
+      <div class="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider px-3 mb-2.5">
+        অ্যাডমিন মডিউল সমূহ
+      </div>
+
+      <nav class="space-y-1.5 flex-1">
+        <button 
+          data-admin-tab="overview"
+          onclick="switchAdminTab('overview')"
+          class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-xs bg-indigo-600 text-white shadow-md shadow-indigo-200 transition"
+        >
+          <i class="fas fa-chart-pie w-4 text-center"></i>
+          <span>৯টি কাউন্টার ওভারভিউ</span>
+        </button>
+
+        <button 
+          data-admin-tab="trips"
+          onclick="switchAdminTab('trips')"
+          class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-xs text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition"
+        >
+          <i class="fas fa-bus-simple w-4 text-center"></i>
+          <span>সকল বাস ট্রিপ ও খালি সিট</span>
+        </button>
+
+        <button 
+          data-admin-tab="performance"
+          onclick="switchAdminTab('performance')"
+          class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-xs text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition"
+        >
+          <i class="fas fa-chart-line w-4 text-center"></i>
+          <span>টার্মিনাল অকুপেন্সি ও রেভিনিউ</span>
+        </button>
+      </nav>
+
+      <!-- 9 Counter Fast Links -->
+      <div class="pt-4 border-t border-slate-100">
+        <span class="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider px-2 block mb-2">কাউন্টার দ্রুত ফিল্টার:</span>
+        <div class="space-y-1 max-h-48 overflow-y-auto pr-1 text-xs">
+          <button onclick="adminState.selectedCounterFilter = 1; switchAdminTab('trips');" class="w-full text-left px-2 py-1 rounded text-slate-600 hover:bg-slate-100 flex justify-between">
+            <span>1. গাবতলী (Gabtoli)</span><span class="text-[10px] text-slate-400">Dhaka</span>
+          </button>
+          <button onclick="adminState.selectedCounterFilter = 2; switchAdminTab('trips');" class="w-full text-left px-2 py-1 rounded text-slate-600 hover:bg-slate-100 flex justify-between">
+            <span>2. সায়েদাবাদ (Sayedabad)</span><span class="text-[10px] text-slate-400">Dhaka</span>
+          </button>
+          <button onclick="adminState.selectedCounterFilter = 3; switchAdminTab('trips');" class="w-full text-left px-2 py-1 rounded text-slate-600 hover:bg-slate-100 flex justify-between">
+            <span>3. মহাখালী (Mohakhali)</span><span class="text-[10px] text-slate-400">Dhaka</span>
+          </button>
+          <button onclick="adminState.selectedCounterFilter = 4; switchAdminTab('trips');" class="w-full text-left px-2 py-1 rounded text-slate-600 hover:bg-slate-100 flex justify-between">
+            <span>4. উত্তরা (Uttara)</span><span class="text-[10px] text-slate-400">Dhaka</span>
+          </button>
+          <button onclick="adminState.selectedCounterFilter = 5; switchAdminTab('trips');" class="w-full text-left px-2 py-1 rounded text-slate-600 hover:bg-slate-100 flex justify-between">
+            <span>5. চট্টগ্রাম জিইসি (CTG)</span><span class="text-[10px] text-slate-400">CTG</span>
+          </button>
+          <button onclick="adminState.selectedCounterFilter = 6; switchAdminTab('trips');" class="w-full text-left px-2 py-1 rounded text-slate-600 hover:bg-slate-100 flex justify-between">
+            <span>6. কক্সবাজার (Cox's Bazar)</span><span class="text-[10px] text-slate-400">CXB</span>
+          </button>
+          <button onclick="adminState.selectedCounterFilter = 7; switchAdminTab('trips');" class="w-full text-left px-2 py-1 rounded text-slate-600 hover:bg-slate-100 flex justify-between">
+            <span>7. সিলেট কদমতলী (Sylhet)</span><span class="text-[10px] text-slate-400">SYL</span>
+          </button>
+          <button onclick="adminState.selectedCounterFilter = 8; switchAdminTab('trips');" class="w-full text-left px-2 py-1 rounded text-slate-600 hover:bg-slate-100 flex justify-between">
+            <span>8. রাজশাহী রেলগেট (Rajshahi)</span><span class="text-[10px] text-slate-400">RAJ</span>
+          </button>
+          <button onclick="adminState.selectedCounterFilter = 9; switchAdminTab('trips');" class="w-full text-left px-2 py-1 rounded text-slate-600 hover:bg-slate-100 flex justify-between">
+            <span>9. বগুড়া সাতমাথা (Bogura)</span><span class="text-[10px] text-slate-400">BOG</span>
+          </button>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+      
+      <!-- Top Metrics -->
+      <div id="adminMetricsRow" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6"></div>
+
+      <!-- Main Dynamic Content -->
+      <div id="adminMainArea"></div>
+
+    </main>
+
+  </div>
+
+  <!-- Admin Seat Plan Modal -->
+  <div id="adminSeatModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs hidden">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full border border-slate-200 p-6">
+      <div class="flex items-center justify-between pb-3 mb-2 border-b border-slate-100">
+        <h4 class="font-black text-slate-900 text-sm flex items-center gap-2">
+          <i class="fas fa-couch text-indigo-600"></i> বাসের সিট প্ল্যান ও খালি সিট
+        </h4>
+        <button onclick="closeAdminSeatModal()" class="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600">
+          <i class="fas fa-times text-xs"></i>
+        </button>
+      </div>
+
+      <div id="adminSeatModalContent">
+        <!-- Injected via JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="data.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sales Terminal Dashboard - Bus Ticket & Schedule Desk</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              900: '#312e81',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Inter', 'Hind Siliguri', sans-serif;
+    }
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body class="bg-slate-100/90 text-slate-800 antialiased min-h-screen flex flex-col">
+
+  <!-- Top Navigation Bar -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
+    <div class="px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
+      
+      <!-- Counter Brand -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-amber-600 text-white flex items-center justify-center shadow-md shadow-amber-200 text-lg">
+          <i class="fas fa-ticket"></i>
+        </div>
+        <div>
+          <h1 class="font-black text-slate-900 text-base leading-tight tracking-tight flex items-center gap-2">
+            <span id="salesCounterTitle">সায়েদাবাদ কাউন্টার</span>
+            <span id="salesCounterCode" class="text-[10px] bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded-full">SAY-02</span>
+          </h1>
+          <p class="text-[11px] text-slate-400 font-medium">কাউন্টার সেলস ও টিকেট বুকিং ডেস্কে স্বাগতম</p>
+        </div>
+      </div>
+
+      <!-- Quick Counter Switcher & User Profile -->
+      <div class="flex items-center gap-3">
+        
+        <!-- Switch Counter Dropdown -->
+        <div class="hidden md:flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
+          <span class="text-[11px] font-bold text-slate-500">টার্মিনাল পরিবর্তন:</span>
+          <select 
+            id="salesCounterSwitcher" 
+            onchange="switchActiveCounter(this.value)" 
+            class="text-xs font-bold bg-white border border-slate-300 rounded-lg px-2 py-1 outline-none text-slate-800"
+          >
+            <option value="1">১. গাবতলী কাউন্টার (Dhaka)</option>
+            <option value="2">২. সায়েদাবাদ কাউন্টার (Dhaka)</option>
+            <option value="3">৩. মহাখালী কাউন্টার (Dhaka)</option>
+            <option value="4">৪. উত্তরা কাউন্টার (Dhaka)</option>
+            <option value="5">৫. চট্টগ্রাম জিইসি কাউন্টার</option>
+            <option value="6">৬. কক্সবাজার কাউন্টার</option>
+            <option value="7">৭. সিলেট কদমতলী কাউন্টার</option>
+            <option value="8">৮. রাজশাহী রেলগেট কাউন্টার</option>
+            <option value="9">৯. বগুড়া সাতমাথা কাউন্টার</option>
+          </select>
+        </div>
+
+        <!-- Link to Admin Dashboard -->
+        <a 
+          href="admin-dashboard.html" 
+          class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 rounded-xl text-xs font-bold transition"
+        >
+          <i class="fas fa-shield-halved text-indigo-600"></i> অ্যাডমিন ভিউ
+        </a>
+
+        <!-- Officer Info -->
+        <div class="flex items-center gap-2 pl-2 border-l border-slate-200">
+          <div class="w-8 h-8 rounded-full bg-amber-600 text-white flex items-center justify-center font-bold text-xs">
+            <i class="fas fa-user-tie"></i>
+          </div>
+          <span id="salesOfficerName" class="hidden md:inline text-xs font-bold text-slate-800">কামাল হোসেন</span>
+        </div>
+
+        <!-- Logout Button -->
+        <button 
+          onclick="salesLogout()" 
+          title="Sign Out" 
+          class="px-3 py-1.5 rounded-xl border border-slate-200 hover:border-rose-300 text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition flex items-center gap-1.5 text-xs font-bold"
+        >
+          <i class="fas fa-right-from-bracket"></i>
+          <span>লগআউট</span>
+        </button>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <div class="flex-1 flex overflow-hidden">
+    
+    <!-- Sidebar -->
+    <aside class="hidden lg:flex flex-col w-64 bg-white border-r border-slate-200 p-4 shrink-0">
+      
+      <div id="sidebarCounterCard" class="mb-4">
+        <!-- Rendered by JS -->
+      </div>
+
+      <div class="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider px-3 mb-2.5">
+        সেলস মডিউল সমূহ
+      </div>
+
+      <nav class="space-y-1.5 flex-1">
+        <button 
+          data-sales-tab="trips"
+          onclick="switchSalesTab('trips')"
+          class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-xs bg-amber-600 text-white shadow-md shadow-amber-200 transition"
+        >
+          <i class="fas fa-bus-simple w-4 text-center"></i>
+          <span>বাস ট্রিপ ও শিডিউল (CRUD)</span>
+        </button>
+
+        <button 
+          data-sales-tab="booking"
+          onclick="switchSalesTab('booking')"
+          class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-xs text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition"
+        >
+          <i class="fas fa-couch w-4 text-center"></i>
+          <span>টিকেট বুকিং ও সিট প্ল্যান</span>
+        </button>
+
+        <button 
+          data-sales-tab="manifest"
+          onclick="switchSalesTab('manifest')"
+          class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-xs text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition"
+        >
+          <i class="fas fa-file-invoice w-4 text-center"></i>
+          <span>বুকিং ও প্যাসেঞ্জার তালিকা</span>
+        </button>
+      </nav>
+
+      <div class="pt-4 border-t border-slate-100">
+        <button onclick="openSalesTripModal()" class="w-full py-2.5 px-3 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl shadow-md shadow-amber-100 transition flex items-center justify-center gap-2">
+          <i class="fas fa-plus"></i> নতুন বাস যোগ করুন
+        </button>
+      </div>
+
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+      <div id="salesMainArea"></div>
+    </main>
+
+  </div>
+
+  <!-- MODAL: ADD / EDIT BUS TRIP FOR THIS COUNTER -->
+  <div id="salesTripModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs hidden">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto border border-slate-200">
+      
+      <div class="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+        <h3 id="salesTripModalTitle" class="text-base font-black text-slate-900">
+          নতুন বাস ট্রিপ যোগ করুন
+        </h3>
+        <button onclick="closeSalesTripModal()" class="w-7 h-7 rounded-full bg-slate-200 hover:bg-slate-300 flex items-center justify-center text-slate-600">
+          <i class="fas fa-times text-xs"></i>
+        </button>
+      </div>
+
+      <form id="salesTripForm" onsubmit="handleSalesTripSubmit(event)" class="p-6 space-y-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">বাস নাম্বার (Reg No.) *</label>
+            <input type="text" id="inputBusNo" required placeholder="e.g. DM-BA-15-4080" class="w-full text-xs font-semibold px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl outline-none focus:border-amber-600" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">কোচ ও মডেল (Bus Name) *</label>
+            <input type="text" id="inputBusName" required placeholder="e.g. Royal Coach Scania" class="w-full text-xs font-semibold px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl outline-none focus:border-amber-600" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">কোচ টাইপ</label>
+            <select id="inputType" class="w-full text-xs font-semibold px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl outline-none focus:border-amber-600">
+              <option value="AC Business Class">AC Business Class</option>
+              <option value="AC Sleeper Suite">AC Sleeper Suite</option>
+              <option value="Non-AC Deluxe">Non-AC Deluxe</option>
+              <option value="AC Double Decker">AC Double Decker</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">গন্তব্য (Destination) *</label>
+            <input type="text" id="inputDestination" required placeholder="e.g. Cox's Bazar / Chittagong" class="w-full text-xs font-semibold px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl outline-none focus:border-amber-600" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">ছাড়ার সময় *</label>
+            <input type="text" id="inputTime" required placeholder="e.g. 08:30 AM" class="w-full text-xs font-semibold px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl outline-none focus:border-amber-600" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">মোট সিট</label>
+            <input type="number" id="inputTotalSeats" value="36" min="10" max="60" required class="w-full text-xs font-semibold px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl outline-none focus:border-amber-600" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">বুকড সিট</label>
+            <input type="number" id="inputBookedSeats" value="0" min="0" class="w-full text-xs font-semibold px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl outline-none focus:border-amber-600" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">টিকেট ভাড়া (৳)</label>
+            <input type="number" id="inputFare" value="1400" min="100" required class="w-full text-xs font-semibold px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl outline-none focus:border-amber-600" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">ড্রাইভার নাম</label>
+            <input type="text" id="inputDriver" placeholder="e.g. মোতালেব মিয়া" class="w-full text-xs font-semibold px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl outline-none focus:border-amber-600" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">স্ট্যাটাস</label>
+            <select id="inputStatus" class="w-full text-xs font-semibold px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl outline-none focus:border-amber-600">
+              <option value="Scheduled">Scheduled (নির্ধারিত)</option>
+              <option value="Boarding">Boarding (বোর্ডিং)</option>
+              <option value="Departed">Departed (ছেড়ে গেছে)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-3">
+          <button type="button" onclick="closeSalesTripModal()" class="px-4 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-600 hover:bg-slate-100">Cancel</button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold shadow-md shadow-amber-200">Save Bus Trip</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: PASSENGER BOOKING FOR A SPECIFIC SEAT -->
+  <div id="bookingPassengerModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs hidden">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full border border-slate-200 p-6">
+      
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div>
+          <h4 class="font-black text-slate-900 text-base flex items-center gap-2">
+            <span class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center text-xs font-black">
+              <span id="modalSeatNo">A1</span>
+            </span>
+            টিকেট বুকিং কনফার্মেশন
+          </h4>
+          <span id="modalBusInfo" class="text-xs text-slate-500 font-medium">Bus details</span>
+        </div>
+        <button onclick="closePassengerBookingModal()" class="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600">
+          <i class="fas fa-times text-xs"></i>
+        </button>
+      </div>
+
+      <form onsubmit="confirmPassengerBooking(event)" class="mt-4 space-y-3.5">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">যাত্রীর নাম (Passenger Name) *</label>
+          <input type="text" id="passName" required placeholder="e.g. মো: তানভীর আহমেদ" class="w-full text-xs font-semibold px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl outline-none focus:border-amber-600" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">মোবাইল নম্বর (Phone Number) *</label>
+          <input type="tel" id="passPhone" required placeholder="e.g. 01712-345678" class="w-full text-xs font-semibold px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl outline-none focus:border-amber-600" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">টিকেট ভাড়া (Fare ৳)</label>
+          <input type="number" id="modalFare" required class="w-full text-xs font-semibold px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl outline-none focus:border-amber-600" />
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+          <button type="button" onclick="closePassengerBookingModal()" class="px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-600">বাতিল</button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-200 flex items-center gap-1.5">
+            <i class="fas fa-check"></i> বুকিং নিশ্চিত করুন
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: PRINTABLE TICKET RECEIPT POPUP -->
+  <div id="ticketPrintModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs hidden">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full border border-slate-200 p-6">
+      
+      <div id="ticketPrintContent">
+        <!-- Injected via JS -->
+      </div>
+
+      <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
+        <button onclick="window.print()" class="px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+          <i class="fas fa-print"></i> প্রিন্ট করুন
+        </button>
+        <button onclick="closeTicketPrintModal()" class="px-4 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-700 hover:bg-slate-100">
+          বন্ধ করুন
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="salesToastContainer" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none"></div>
+
+  <!-- Scripts -->
+  <script src="data.js"></script>
+  <script src="sales.js"></script>
+</body>
+</html>
