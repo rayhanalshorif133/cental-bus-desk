@@ -450,16 +450,53 @@ def create_presentation():
         pb.space_after = Pt(10)
 
     # =========================================================================
-    # SLIDE 9: EXECUTIVE SUMMARY & BUSINESS ADVANTAGES
+    # SLIDE 9: COMPANY INCOME & EXPENSE AUDIT (IMAGE: 09_admin_finance_audit.png)
     # =========================================================================
     slide9 = prs.slides.add_slide(blank_layout)
-    set_slide_background(slide9, COLOR_BG_DARK)
-    add_header(slide9, "Executive Summary", "সিস্টেমের প্রযুক্তিগত উৎকর্ষ ও ব্যবসায়িক সুবিধাসমূহ", "বাস ফ্লিট পরিচালনায় ১০০% আধুনিকীকরণ, স্বচ্ছতা এবং আয়ের সর্বোচ্চ সুরক্ষা", dark=True)
+    set_slide_background(slide9, COLOR_BG_LIGHT)
+    add_header(slide9, "Financial Management", "কোম্পানি আয়-ব্যয় অডিট ও কাউন্টার ক্যাশবুক মডিউল", "১০টি কাউন্টার ও হেডকোয়ার্টারের টিকেট সেলস, ফুয়েল স্লিপ, টোল ও অপারেটিং খরচের লাইভ অডিট")
+
+    img_path_fin = os.path.join(assets_dir, "09_admin_finance_audit.png")
+    if os.path.exists(img_path_fin):
+        slide9.shapes.add_picture(img_path_fin, Inches(0.8), Inches(1.8), width=Inches(7.3))
+
+    right_box9 = slide9.shapes.add_textbox(Inches(8.4), Inches(1.8), Inches(4.1), Inches(5.0))
+    rtf9 = right_box9.text_frame
+    rtf9.word_wrap = True
+
+    finance_features = [
+        ("💰 রিয়েল-টাইম আয়-ব্যয় ও প্রফিট মার্জিন", "প্রধান কার্যালয় থেকে এক নজরে কোম্পানির মোট রাজস্ব আয়, মোট পরিচালন ব্যয় ও নীট প্রফিট মার্জিন (%) লাইভ মনিটরিং।"),
+        ("⛽ ফুয়েল স্লিপ ও সেতু টোল ট্র্যাকিং", "প্রতিটি বাসের মেঘনা/পদ্মা সেতু টোল, ফিলিং স্টেশনের ডিজেল বিল ও ড্রাইভার খোরাকি ভাউচার নম্বরসহ এন্ট্রি।"),
+        ("📦 পার্সেল ও চার্টার রিজার্ভ ইনকাম", "যাত্রী টিকেট ছাড়াও কুরিয়ার কার্গো এবং স্পেশাল বাস রিজার্ভেশনের অতিরিক্ত আয় স্বয়ংক্রিয়ভাবে ব্যালেন্সে যুক্ত।"),
+        ("🏦 কাউন্টার দৈনিক ক্যাশবুক (Cash in Hand)", "১০টি কাউন্টারের ক্যাশবাক্সে কত টাকা জমা হলো এবং দিনশেষে হেডকোয়ার্টারে কত জমা হবে তার স্বচ্ছ হিসাব।"),
+        ("🖨️ অডিট লেজার ফিল্টার ও প্রিন্ট", "কাউন্টার, ভাউচার বা ক্যাটাগরি অনুযায়ী যেকোনো খরচের পূর্ণাঙ্গ হিসেব ফিল্টার ও ১-ক্লিকে প্রিন্ট সুবিধা।")
+    ]
+
+    for i, (head, body) in enumerate(finance_features):
+        ph = rtf9.paragraphs[0] if i == 0 else rtf9.add_paragraph()
+        ph.text = head
+        ph.font.size = Pt(11.5)
+        ph.font.bold = True
+        ph.font.color.rgb = COLOR_TEXT_MAIN
+        ph.space_after = Pt(2)
+
+        pb = rtf9.add_paragraph()
+        pb.text = body
+        pb.font.size = Pt(10)
+        pb.font.color.rgb = COLOR_TEXT_MUTED
+        pb.space_after = Pt(8)
+
+    # =========================================================================
+    # SLIDE 10: EXECUTIVE SUMMARY & BUSINESS ADVANTAGES
+    # =========================================================================
+    slide10 = prs.slides.add_slide(blank_layout)
+    set_slide_background(slide10, COLOR_BG_DARK)
+    add_header(slide10, "Executive Summary", "সিস্টেমের প্রযুক্তিগত উৎকর্ষ ও ব্যবসায়িক সুবিধাসমূহ", "বাস ফ্লিট পরিচালনায় ১০০% আধুনিকীকরণ, স্বচ্ছতা এবং আয়ের সর্বোচ্চ সুরক্ষা", dark=True)
 
     summary_cards = [
         ("🚀 সেন্ট্রাল হেডকোয়ার্টার ভিজিবিলিটি", "প্রধান অ্যাডমিন অফিসে বসেই ১০টি টার্মিনালের সকল বাসের অবস্থান ও খালি সিটের রিয়েল-টাইম তথ্য পাচ্ছেন।"),
         ("⚡ টার্মিনালগুলোর বিকেন্দ্রীভূত স্বাধীনতা", "১০টি কাউন্টারের সেলস টিম স্বাধীনভাবে তাদের বাসের শিডিউল ম্যানেজ ও দ্রুত টিকেট বুকিং করতে পারছে।"),
-        ("💺 শতভাগ সিট অকুপেন্সি বৃদ্ধি", "কোন বাসে সিট খালি আছে তা হেডকোয়ার্টার আগে থেকেই দেখতে পেয়ে দ্রুত সিদ্ধান্ত ও রুট রিশিডিউলিং করতে পারছে।"),
+        ("💰 আয় ও ব্যয়ের শতভাগ স্বচ্ছতা", "প্রতিটি লিটার ফুয়েল, ব্রিজ টোল ও পার্সেল ইনকাম ভাউচারসহ অডিট হওয়ায় আর্থিক অপচয় বা তছরুপ বন্ধ।"),
         ("💻 জিরো সার্ভার ওভারহেড ও দ্রুত গতি", "Tailwind CSS ও আধুনিক ব্রাউজার-ফার্স্ট আর্কিটেকচারে তৈরি, কোনো জটিল ব্যাকএন্ড ছাড়াও অত্যন্ত দ্রুতগতিতে কাজ করে।")
     ]
 
@@ -469,12 +506,12 @@ def create_presentation():
         sx = Inches(0.8 + col * 5.9)
         sy = Inches(1.9 + row * 2.3)
 
-        card = slide9.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, sx, sy, Inches(5.6), Inches(2.0))
+        card = slide10.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, sx, sy, Inches(5.6), Inches(2.0))
         card.fill.solid()
         card.fill.fore_color.rgb = COLOR_CARD_DARK
         card.line.color.rgb = RGBColor(51, 65, 85)
 
-        tb = slide9.shapes.add_textbox(sx + Inches(0.3), sy + Inches(0.25), Inches(5.0), Inches(1.5))
+        tb = slide10.shapes.add_textbox(sx + Inches(0.3), sy + Inches(0.25), Inches(5.0), Inches(1.5))
         tf = tb.text_frame
         tf.word_wrap = True
 
@@ -492,11 +529,11 @@ def create_presentation():
         p2.space_after = Pt(2)
 
     # =========================================================================
-    # SLIDE 10: 2-3 MONTHS FULL DEVELOPMENT TIMELINE & ROADMAP (10 Counters)
+    # SLIDE 11: 2-3 MONTHS FULL DEVELOPMENT TIMELINE & ROADMAP (10 Counters)
     # =========================================================================
-    slide10 = prs.slides.add_slide(blank_layout)
-    set_slide_background(slide10, COLOR_BG_LIGHT)
-    add_header(slide10, "Development Roadmap", "সম্পূর্ণ প্রজেক্ট ডেভেলপমেন্ট টাইমলাইন (২-৩ মাস / ১০-১২ সপ্তাহ)", "UI/UX ডিজাইন, রেসপন্সিভ লেআউট, ব্যাকএন্ড API, ডাটাবেস আর্কিটেকচার ও রোল ম্যানেজমেন্ট (RBAC)")
+    slide11 = prs.slides.add_slide(blank_layout)
+    set_slide_background(slide11, COLOR_BG_LIGHT)
+    add_header(slide11, "Development Roadmap", "সম্পূর্ণ প্রজেক্ট ডেভেলপমেন্ট টাইমলাইন (২-৩ মাস / ১০-১২ সপ্তাহ)", "UI/UX ডিজাইন, রেসপন্সিভ লেআউট, ব্যাকএন্ড API, ডাটাবেস আর্কিটেকচার ও রোল ম্যানেজমেন্ট (RBAC)")
 
     timeline_phases = [
         {
@@ -529,16 +566,16 @@ def create_presentation():
         },
         {
             "phase": "PHASE 3 (Week 7 - 9)",
-            "title": "RBAC Roles & POS Engine",
-            "tag": "২য় মাস • রোল ও বুকিং ইঞ্জিন",
+            "title": "RBAC Roles & Accounting",
+            "tag": "২য় মাস • রোল ও আয়-ব্যয় ইঞ্জিন",
             "color": COLOR_AMBER,
             "badge_bg": COLOR_AMBER_LIGHT,
             "points": [
                 ("🛡️ Strict Multi-Role RBAC", "Super Admin HQ বনাম ১০টি কাউন্টার সেলস পারমিশন।"),
+                ("💰 Income & Expense Cashbook", "ডিজেল, টোল, পার্সেল ও কাউন্টার ক্যাশ ট্র্যাকিং।"),
                 ("🎫 POS Ticket Generator", "ইউনিক টিকেট আইডি ও থার্মাল প্রিন্ট ইঞ্জিন।"),
                 ("📡 Real-Time WebSockets", "কাউন্টার থেকে সিট কাটলে হেডকোয়ার্টারে লাইভ সিঙ্ক।"),
-                ("💰 Daily Revenue Accounting", "১০টি কাউন্টারভিত্তিক ক্যাশ ও বিক্রির হিসেব।"),
-                ("📋 Passenger Manifest Export", "বাস সুপারভাইজারের জন্য প্যাসেঞ্জার শিট তৈরি।")
+                ("📊 Financial Margin Audit", "টার্মিনালভিত্তিক মুনাফা ও গ্রস মার্জিন অ্যানালিটিক্স।")
             ]
         },
         {
@@ -565,12 +602,12 @@ def create_presentation():
     for i, p_data in enumerate(timeline_phases):
         px = t_start_x + i * (col_w + col_gap)
         
-        p_card = slide10.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, px, t_start_y, col_w, Inches(4.5))
+        p_card = slide11.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, px, t_start_y, col_w, Inches(4.5))
         p_card.fill.solid()
         p_card.fill.fore_color.rgb = COLOR_CARD_LIGHT
         p_card.line.color.rgb = COLOR_BORDER
 
-        pill = slide10.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, px + Inches(0.12), t_start_y + Inches(0.12), col_w - Inches(0.24), Inches(0.32))
+        pill = slide11.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, px + Inches(0.12), t_start_y + Inches(0.12), col_w - Inches(0.24), Inches(0.32))
         pill.fill.solid()
         pill.fill.fore_color.rgb = p_data["badge_bg"]
         pill.line.color.rgb = p_data["color"]
@@ -582,7 +619,7 @@ def create_presentation():
         plp.font.bold = True
         plp.font.color.rgb = p_data["color"]
 
-        ctb = slide10.shapes.add_textbox(px + Inches(0.14), t_start_y + Inches(0.5), col_w - Inches(0.28), Inches(3.9))
+        ctb = slide11.shapes.add_textbox(px + Inches(0.14), t_start_y + Inches(0.5), col_w - Inches(0.28), Inches(3.9))
         ctf = ctb.text_frame
         ctf.word_wrap = True
 
@@ -614,7 +651,7 @@ def create_presentation():
             p_bd.space_after = Pt(4)
 
     # Bottom Milestone Banner
-    bm_banner = slide10.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.8), Inches(6.35), Inches(11.7), Inches(0.7))
+    bm_banner = slide11.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.8), Inches(6.35), Inches(11.7), Inches(0.7))
     bm_banner.fill.solid()
     bm_banner.fill.fore_color.rgb = RGBColor(238, 242, 255)
     bm_banner.line.color.rgb = COLOR_PRIMARY_LIGHT
@@ -627,17 +664,17 @@ def create_presentation():
     bmp.font.color.rgb = COLOR_PRIMARY
 
     # =========================================================================
-    # SLIDE 11: THANK YOU / CLOSING PAGE (10 Terminals)
+    # SLIDE 12: THANK YOU / CLOSING PAGE (10 Terminals)
     # =========================================================================
-    slide11 = prs.slides.add_slide(blank_layout)
-    set_slide_background(slide11, COLOR_BG_DARK)
+    slide12 = prs.slides.add_slide(blank_layout)
+    set_slide_background(slide12, COLOR_BG_DARK)
 
-    c_box = slide11.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(1.5), Inches(1.0), Inches(10.33), Inches(5.5))
+    c_box = slide12.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(1.5), Inches(1.0), Inches(10.33), Inches(5.5))
     c_box.fill.solid()
     c_box.fill.fore_color.rgb = COLOR_CARD_DARK
     c_box.line.color.rgb = RGBColor(51, 65, 85)
 
-    t_box = slide11.shapes.add_textbox(Inches(2.0), Inches(1.3), Inches(9.33), Inches(4.9))
+    t_box = slide12.shapes.add_textbox(Inches(2.0), Inches(1.3), Inches(9.33), Inches(4.9))
     ttf = t_box.text_frame
     ttf.word_wrap = True
 

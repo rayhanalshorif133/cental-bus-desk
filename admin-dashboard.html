@@ -149,6 +149,16 @@
           <i class="fas fa-chart-line w-4 text-center"></i>
           <span>টার্মিনাল অকুপেন্সি ও রেভিনিউ</span>
         </button>
+
+        <button 
+          data-admin-tab="finance"
+          onclick="switchAdminTab('finance')"
+          class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-xs text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition"
+        >
+          <i class="fas fa-coins w-4 text-center text-amber-500"></i>
+          <span class="flex-1 text-left">কোম্পানি আয়-ব্যয় অডিট</span>
+          <span class="text-[10px] bg-amber-100 text-amber-800 font-extrabold px-1.5 py-0.5 rounded">নতুন</span>
+        </button>
       </nav>
 
       <!-- 10 Counter Fast Links -->
@@ -218,6 +228,97 @@
       <div id="adminSeatModalContent">
         <!-- Injected via JS -->
       </div>
+    </div>
+  </div>
+
+  <!-- Admin Add / Record Transaction Modal -->
+  <div id="adminTxnModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs hidden">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full border border-slate-200 overflow-hidden">
+      <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
+        <div>
+          <h4 class="font-black text-sm flex items-center gap-2">
+            <i class="fas fa-receipt text-amber-400"></i> নতুন আয় / ব্যয় ভাউচার এন্ট্রি (Audit Entry)
+          </h4>
+          <p class="text-[11px] text-slate-400">সেন্ট্রাল হেডকোয়ার্টার অথবা কাউন্টারের আর্থিক লেনদেন সংরক্ষণ করুন</p>
+        </div>
+        <button onclick="closeAdminTxnModal()" class="w-7 h-7 rounded-full bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-300">
+          <i class="fas fa-times text-xs"></i>
+        </button>
+      </div>
+
+      <form id="adminTxnForm" onsubmit="handleAdminTxnSubmit(event)" class="p-6 space-y-4">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">লেনদেনের ধরণ (Type) *</label>
+            <select id="adminTxnType" onchange="onAdminTxnTypeChange()" class="w-full text-xs font-bold px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl outline-none focus:border-indigo-600">
+              <option value="Expense">ব্যয় (Expense / Debit)</option>
+              <option value="Income">আয় (Income / Credit)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">ভাউচার নম্বর (Voucher No) *</label>
+            <input type="text" id="adminTxnVoucher" required class="w-full text-xs font-bold px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl outline-none focus:border-indigo-600" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">শাখা / কাউন্টার *</label>
+            <select id="adminTxnCounter" class="w-full text-xs font-semibold px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl outline-none focus:border-indigo-600">
+              <option value="0">সেন্ট্রাল হেডকোয়ার্টার (Central HQ)</option>
+              <option value="1">১. গাবতলী কাউন্টার (Gabtoli)</option>
+              <option value="2">২. সায়েদাবাদ কাউন্টার (Sayedabad)</option>
+              <option value="3">৩. মহাখালী কাউন্টার (Mohakhali)</option>
+              <option value="4">৪. উত্তরা কাউন্টার (Uttara)</option>
+              <option value="5">৫. চট্টগ্রাম জিইসি কাউন্টার (CTG)</option>
+              <option value="6">৬. কক্সবাজার ঝাউতলা কাউন্টার (CXB)</option>
+              <option value="7">৭. সিলেট কদমতলী কাউন্টার (Sylhet)</option>
+              <option value="8">৮. রাজশাহী রেলগেট কাউন্টার (Rajshahi)</option>
+              <option value="9">৯. বগুড়া সাতমাথা কাউন্টার (Bogura)</option>
+              <option value="10">১০. খুলনা সোনাডাঙ্গা কাউন্টার (Khulna)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">ক্যাটাগরি (Category) *</label>
+            <select id="adminTxnCategory" class="w-full text-xs font-semibold px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl outline-none focus:border-indigo-600">
+              <!-- Dynamically populated -->
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">টাকার পরিমাণ (Amount BDT) *</label>
+            <input type="number" id="adminTxnAmount" min="1" required placeholder="e.g. 15000" class="w-full text-xs font-bold px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl outline-none focus:border-indigo-600 text-indigo-700" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">পেমেন্ট মেথড</label>
+            <select id="adminTxnPaymentMethod" class="w-full text-xs font-semibold px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl outline-none focus:border-indigo-600">
+              <option value="Cash">Cash (নগদ)</option>
+              <option value="Fuel Slip / Voucher">Fuel Slip / পেট্রোল পাম্প স্লিপ</option>
+              <option value="Bank Transfer">Bank Transfer / চেক</option>
+              <option value="bKash / Nagad">bKash / Nagad MFS</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">বাস নাম্বার (প্রযোজ্য ক্ষেত্রে)</label>
+          <input type="text" id="adminTxnBusNo" placeholder="যেমন: DM-BA-12-8821 অথবা N/A" class="w-full text-xs font-semibold px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl outline-none focus:border-indigo-600" />
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">বিবরণ / ন্যারেশন (Description) *</label>
+          <textarea id="adminTxnDescription" rows="2" required placeholder="খরচ বা আয়ের সুনির্দিষ্ট বিবরণ..." class="w-full text-xs font-semibold px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl outline-none focus:border-indigo-600"></textarea>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+          <button type="button" onclick="closeAdminTxnModal()" class="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl">বাতিল</button>
+          <button type="submit" class="px-5 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md shadow-indigo-200">
+            <i class="fas fa-check mr-1"></i> ভাউচার সংরক্ষণ করুন
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 

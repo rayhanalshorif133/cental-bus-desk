@@ -169,6 +169,16 @@
           <i class="fas fa-file-invoice w-4 text-center"></i>
           <span>বুকিং ও প্যাসেঞ্জার তালিকা</span>
         </button>
+
+        <button 
+          data-sales-tab="cashbook"
+          onclick="switchSalesTab('cashbook')"
+          class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-xs text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition"
+        >
+          <i class="fas fa-coins w-4 text-center text-amber-500"></i>
+          <span class="flex-1 text-left">কাউন্টার আয়-ব্যয় ক্যাশবুক</span>
+          <span class="text-[10px] bg-amber-100 text-amber-800 font-extrabold px-1.5 py-0.5 rounded">নতুন</span>
+        </button>
       </nav>
 
       <div class="pt-4 border-t border-slate-100">
@@ -330,6 +340,83 @@
           বন্ধ করুন
         </button>
       </div>
+    </div>
+  </div>
+
+  <!-- COUNTER CASHBOOK MODAL: ADD EXPENSE / INCOME -->
+  <div id="salesCashbookModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs hidden">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full border border-slate-200 overflow-hidden">
+      
+      <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
+        <div>
+          <h4 class="font-black text-sm flex items-center gap-2">
+            <i class="fas fa-coins text-amber-400"></i> কাউন্টার দৈনিক খরচ / পার্সেল আয় এন্ট্রি
+          </h4>
+          <p class="text-[11px] text-slate-400">ফুয়েল স্লিপ, সেতু টোল, চালক খোরাকি বা অতিরিক্ত আয় যুক্ত করুন</p>
+        </div>
+        <button onclick="closeSalesCashbookModal()" class="w-7 h-7 rounded-full bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-300">
+          <i class="fas fa-times text-xs"></i>
+        </button>
+      </div>
+
+      <form id="salesCashbookForm" onsubmit="handleSalesCashbookSubmit(event)" class="p-6 space-y-4">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">লেনদেনের ধরণ (Type) *</label>
+            <select id="salesTxnType" onchange="onSalesTxnTypeChange()" class="w-full text-xs font-bold px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl outline-none focus:border-amber-600">
+              <option value="Expense">কাউন্টার ব্যয় (Expense / Debit)</option>
+              <option value="Income">পার্সেল বা অন্যান্য আয় (Credit)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">ভাউচার নম্বর *</label>
+            <input type="text" id="salesTxnVoucher" required class="w-full text-xs font-bold px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl outline-none focus:border-amber-600" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">খাত (Category) *</label>
+            <select id="salesTxnCategory" class="w-full text-xs font-semibold px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl outline-none focus:border-amber-600">
+              <!-- Populated dynamically -->
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">প্রযোজ্য বাস ট্রিপ</label>
+            <select id="salesTxnBus" class="w-full text-xs font-semibold px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl outline-none focus:border-amber-600">
+              <!-- Populated dynamically with counter buses -->
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">টাকার পরিমাণ (Amount BDT) *</label>
+            <input type="number" id="salesTxnAmount" min="1" required placeholder="e.g. 3500" class="w-full text-xs font-bold px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl outline-none focus:border-amber-600 text-amber-700" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">পরিশোধের মাধ্যম</label>
+            <select id="salesTxnMethod" class="w-full text-xs font-semibold px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl outline-none focus:border-amber-600">
+              <option value="Cash">Cash (নগদ ক্যাশবাক্স)</option>
+              <option value="Fuel Slip / Voucher">Fuel Slip (পাম্প স্লিপ)</option>
+              <option value="bKash / Nagad">bKash / Nagad MFS</option>
+              <option value="Bank Slip">Bank Deposit</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">বিবরণ (Narration / Details) *</label>
+          <textarea id="salesTxnDescription" rows="2" required placeholder="খরচ বা আয়ের সুনির্দিষ্ট বিবরণ লিখুন..." class="w-full text-xs font-semibold px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl outline-none focus:border-amber-600"></textarea>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+          <button type="button" onclick="closeSalesCashbookModal()" class="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl">বাতিল</button>
+          <button type="submit" class="px-5 py-2 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-xl shadow-md shadow-amber-200">
+            <i class="fas fa-check mr-1"></i> ক্যাশবুক ভাউচার যুক্ত করুন
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 

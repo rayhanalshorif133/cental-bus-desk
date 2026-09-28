@@ -6,12 +6,16 @@
 let salesState = {
   user: null,
   activeCounter: null,
-  activeTab: "trips", // 'overview', 'trips', 'booking', 'tickets'
+  activeTab: "trips", // 'overview', 'trips', 'booking', 'tickets', 'cashbook'
   counters: [],
   trips: [],
   selectedBusForBooking: null,
   bookedTickets: [],
-  searchQuery: ""
+  searchQuery: "",
+  cashbookFilter: {
+    type: "all",
+    search: ""
+  }
 };
 
 function initSalesDashboard() {
@@ -206,6 +210,8 @@ function renderSalesContent() {
     renderBookingBusSelector();
   } else if (salesState.activeTab === 'manifest') {
     container.innerHTML = metricsHTML + getSalesManifestHTML();
+  } else if (salesState.activeTab === 'cashbook') {
+    container.innerHTML = metricsHTML + getSalesCashbookHTML();
   }
 }
 
@@ -892,6 +898,333 @@ function showToast(msg, type = 'success') {
     toast.classList.add('opacity-0', 'translate-y-2');
     setTimeout(() => toast.remove(), 300);
   }, 3000);
+}
+
+// -------------------------------------------------------------
+// MODULE 4: COUNTER DAILY CASHBOOK (Income & Expense)
+// -------------------------------------------------------------
+function getSalesCashbookHTML() {
+  const counterId = salesState.activeCounter.id;
+  const allTxns = getStoredTransactions();
+  const counterTxns = allTxns.filter(t => t.counterId === counterId);
+
+  // Compute counter metrics
+  const counterMetrics = computeCounterMetrics();
+  const directInflow = counterTxns.filter(t => t.type === 'Income').reduce((s, t) => s + Number(t.amount || 0), 0);
+  const totalOutflow = counterTxns.filter(t => t.type === 'Expense').reduce((s, t) => s + Number(t.amount || 0), 0);
+  const totalInflow = counterMetrics.revenue + directInflow;
+  const cashInHand = totalInflow - totalOutflow;
+
+  // Filter
+  const f = salesState.cashbookFilter;
+  const filtered = counterTxns.filter(t => {
+    if (f.type !== 'all' && t.type !== f.type) return false;
+    if (f.search) {
+      const q = f.search.toLowerCase();
+      const match = (t.voucherNo && t.voucherNo.toLowerCase().includes(q)) ||
+                    (t.description && t.description.toLowerCase().includes(q)) ||
+                    (t.busNo && t.busNo.toLowerCase().includes(q)) ||
+                    (t.category && t.category.toLowerCase().includes(q));
+      if (!match) return false;
+    }
+    return true;
+  });
+
+  const rows = filtered.length === 0 ? `
+    <tr>
+      <td colspan="7" class="text-center py-8 text-slate-400 text-xs">
+        <i class="fas fa-receipt text-3xl mb-2 text-slate-300 block"></i>
+        এই কাউন্টারে কোনো খরচ বা পার্সেল ভাউচার এন্ট্রি নেই।
+      </td>
+    </tr>
+  ` : filtered.map(t => {
+    const isIncome = t.type === 'Income';
+    return `
+      <tr class="hover:bg-slate-50 transition text-xs">
+        <td class="py-3 px-4 font-mono font-bold text-slate-800">
+          <div>${t.voucherNo || t.id}</div>
+          <div class="text-[10px] text-slate-400 font-sans">${t.date} ${t.time || ''}</div>
+        </td>
+        <td class="py-3 px-4">
+          <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${isIncome ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">
+            <i class="fas ${isIncome ? 'fa-arrow-down' : 'fa-arrow-up'}"></i>
+            ${isIncome ? 'আয় (Credit)' : 'ব্যয় (Debit)'}
+          </span>
+        </td>
+        <td class="py-3 px-4 font-semibold text-slate-800">
+          ${t.category}
+          ${t.busNo && t.busNo !== 'N/A' ? `<span class="block text-[10px] text-slate-400 font-mono mt-0.5"><i class="fas fa-bus mr-1"></i>${t.busNo}</span>` : ''}
+        </td>
+        <td class="py-3 px-4 text-slate-600 max-w-xs">
+          <p class="truncate" title="${t.description}">${t.description}</p>
+          <span class="text-[10px] text-slate-400 font-medium">পদ্ধতি: ${t.paymentMethod || 'Cash'}</span>
+        </td>
+        <td class="py-3 px-4 text-right font-black text-sm ${isIncome ? 'text-emerald-700' : 'text-rose-700'}">
+          ${isIncome ? '+' : '-'} ৳ ${Number(t.amount).toLocaleString()}
+        </td>
+        <td class="py-3 px-4 text-slate-500 text-[11px]">
+          <i class="fas fa-user-pen mr-1 text-slate-400"></i> ${t.recordedBy || 'Manager'}
+        </td>
+        <td class="py-3 px-4 text-center">
+          <button 
+            onclick="deleteSalesCashbookTxn('${t.id}')"
+            title="মুছুন"
+            class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-rose-100 text-slate-400 hover:text-rose-600 transition inline-flex items-center justify-center text-xs"
+          >
+            <i class="fas fa-trash-can"></i>
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  return `
+    <div class="space-y-6">
+      
+      <!-- Header -->
+      <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-xl font-black text-slate-900 flex items-center gap-2">
+            <i class="fas fa-coins text-amber-500"></i>
+            ${salesState.activeCounter.name} - দৈনিক আয়-ব্যয় ক্যাশবুক (Counter Daily Cashbook)
+          </h2>
+          <p class="text-xs text-slate-500 mt-1">
+            এই কাউন্টারের ফুয়েল স্লিপ, সেতু টোল, স্টাফ খোরাকি ও পার্সেল জমার হিসাব এবং দিনশেষে জমাযোগ্য ক্যাশ ব্যালেন্স
+          </p>
+        </div>
+
+        <div class="flex items-center gap-2 self-start sm:self-auto">
+          <button 
+            onclick="window.print()" 
+            class="px-3.5 py-2 rounded-xl border border-slate-200 hover:border-slate-300 text-slate-700 bg-slate-50 hover:bg-slate-100 text-xs font-bold transition flex items-center gap-1.5"
+          >
+            <i class="fas fa-print"></i> ক্যাশবুক প্রিন্ট
+          </button>
+          <button 
+            onclick="openSalesCashbookModal()" 
+            class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold shadow-md shadow-amber-200 transition flex items-center gap-2"
+          >
+            <i class="fas fa-plus"></i> খরচ / পার্সেল এন্ট্রি
+          </button>
+        </div>
+      </div>
+
+      <!-- Cashbook Balance Summary Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs">
+          <div class="flex items-center justify-between text-slate-400">
+            <span class="text-[11px] font-bold uppercase tracking-wider">কাউন্টার মোট ইনকাম</span>
+            <span class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm"><i class="fas fa-arrow-down"></i></span>
+          </div>
+          <div class="mt-2">
+            <h3 class="text-2xl font-black text-emerald-700">৳ ${totalInflow.toLocaleString()}</h3>
+            <p class="text-[11px] text-slate-500 mt-0.5">টিকেট: ৳${counterMetrics.revenue.toLocaleString()} + পার্সেল: ৳${directInflow.toLocaleString()}</p>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs">
+          <div class="flex items-center justify-between text-slate-400">
+            <span class="text-[11px] font-bold uppercase tracking-wider">কাউন্টার দৈনিক খরচ</span>
+            <span class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center text-sm"><i class="fas fa-arrow-up"></i></span>
+          </div>
+          <div class="mt-2">
+            <h3 class="text-2xl font-black text-rose-700">৳ ${totalOutflow.toLocaleString()}</h3>
+            <p class="text-[11px] text-slate-500 mt-0.5">ফুয়েল, টোল স্লিপ ও আনুষঙ্গিক</p>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs">
+          <div class="flex items-center justify-between text-slate-400">
+            <span class="text-[11px] font-bold uppercase tracking-wider">কাউন্টার ক্যাশ ইন হ্যান্ড</span>
+            <span class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-sm"><i class="fas fa-vault"></i></span>
+          </div>
+          <div class="mt-2">
+            <h3 class="text-2xl font-black text-amber-700">৳ ${cashInHand.toLocaleString()}</h3>
+            <p class="text-[11px] text-emerald-600 font-bold mt-0.5 flex items-center gap-1">
+              <i class="fas fa-circle-check"></i> দিনশেষে হেডকোয়ার্টারে হস্তান্তরযোগ্য
+            </p>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs">
+          <div class="flex items-center justify-between text-slate-400">
+            <span class="text-[11px] font-bold uppercase tracking-wider">লোকাল ভাউচার সংখ্যা</span>
+            <span class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center text-sm"><i class="fas fa-receipt"></i></span>
+          </div>
+          <div class="mt-2">
+            <h3 class="text-2xl font-black text-slate-900">${counterTxns.length} টি স্লিপ</h3>
+            <p class="text-[11px] text-slate-500 mt-0.5">${salesState.activeCounter.code} টার্মিনাল ডেস্কে সংরক্ষিত</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Filter Controls Bar -->
+      <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div class="flex flex-wrap items-center gap-2 flex-1">
+          <div class="relative min-w-[200px] flex-1 sm:flex-none">
+            <i class="fas fa-search absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+            <input 
+              type="text" 
+              placeholder="ভাউচার, বিবরণ বা বাস নং..." 
+              value="${f.search}"
+              oninput="salesState.cashbookFilter.search = this.value; renderSalesContent();"
+              class="w-full pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:border-amber-600"
+            />
+          </div>
+
+          <select 
+            onchange="salesState.cashbookFilter.type = this.value; renderSalesContent();"
+            class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 font-bold outline-none text-slate-700"
+          >
+            <option value="all" ${f.type === 'all' ? 'selected' : ''}>সকল ভাউচার (All)</option>
+            <option value="Expense" ${f.type === 'Expense' ? 'selected' : ''}>শুধু খরচ (Expense Outflow)</option>
+            <option value="Income" ${f.type === 'Income' ? 'selected' : ''}>শুধু জমা (Parcel Inflow)</option>
+          </select>
+
+          ${(f.type !== 'all' || f.search) ? `
+            <button 
+              onclick="salesState.cashbookFilter = { type: 'all', search: '' }; renderSalesContent();"
+              class="px-2.5 py-1.5 text-xs text-rose-600 hover:bg-rose-50 rounded-xl font-bold transition flex items-center gap-1"
+            >
+              <i class="fas fa-rotate-left"></i> রিসেট
+            </button>
+          ` : ''}
+        </div>
+
+        <div class="text-xs font-bold text-slate-500">
+          ফিল্টার্ড রেকর্ড: <span class="text-amber-600">${filtered.length}</span> টি
+        </div>
+      </div>
+
+      <!-- Cashbook Ledger Table -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+          <h3 class="text-sm font-black text-slate-900 flex items-center gap-2">
+            <i class="fas fa-book text-amber-600"></i>
+            কাউন্টার দৈনিক ক্যাশবুক ও ভাউচার লেজার
+          </h3>
+          <span class="text-xs text-slate-400">কাউন্টার: ${salesState.activeCounter.name}</span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left">
+            <thead>
+              <tr class="text-[11px] uppercase font-extrabold text-slate-400 bg-slate-50 border-b border-slate-200">
+                <th class="py-3 px-4">ভাউচার নং ও সময়</th>
+                <th class="py-3 px-4">ধরণ</th>
+                <th class="py-3 px-4">খাত ও বাস নং</th>
+                <th class="py-3 px-4">বিবরণ ও পেমেন্ট মাধ্যম</th>
+                <th class="py-3 px-4 text-right">টাকার পরিমাণ (BDT)</th>
+                <th class="py-3 px-4">অফিসার</th>
+                <th class="py-3 px-4 text-center">মুছুন</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              ${rows}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  `;
+}
+
+function openSalesCashbookModal() {
+  const modal = document.getElementById('salesCashbookModal');
+  if (!modal) return;
+
+  const voucherInput = document.getElementById('salesTxnVoucher');
+  if (voucherInput) {
+    voucherInput.value = `VR-${salesState.activeCounter.code}-${Math.floor(100 + Math.random() * 900)}`;
+  }
+
+  // Populate counter buses
+  const busSelect = document.getElementById('salesTxnBus');
+  if (busSelect) {
+    const counterBuses = salesState.trips.filter(t => t.fromCounterId === salesState.activeCounter.id);
+    busSelect.innerHTML = `
+      <option value="N/A">নির্দিষ্ট বাস প্রযোজ্য নয় (General Counter)</option>
+      ${counterBuses.map(b => `<option value="${b.busNo}">${b.busNo} (${b.destination})</option>`).join('')}
+    `;
+  }
+
+  onSalesTxnTypeChange();
+  modal.classList.remove('hidden');
+}
+
+function closeSalesCashbookModal() {
+  const modal = document.getElementById('salesCashbookModal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function onSalesTxnTypeChange() {
+  const typeSelect = document.getElementById('salesTxnType');
+  const catSelect = document.getElementById('salesTxnCategory');
+  if (!typeSelect || !catSelect) return;
+
+  const isIncome = typeSelect.value === 'Income';
+  const categories = isIncome ? [
+    "পার্সেল ও কুরিয়ার বুকিং (Cargo & Parcel)",
+    "অতিরিক্ত লাগেজ চার্জ (Extra Luggage Fee)",
+    "অন্যান্য অপারেটিং আয় (Other Income)"
+  ] : [
+    "ডিজেল ও ফুয়েল খরচ (Fuel & Diesel)",
+    "হাইওয়ে ও সেতু টোল (Highway & Bridge Tolls)",
+    "চালক ও স্টাফ খোরাকি (Crew Road Allowance)",
+    "অফিস ও যাত্রী আপ্যায়ন (Office & Entertainment)",
+    "অন্যান্য পরিচালন ব্যয় (Other Expenses)"
+  ];
+
+  catSelect.innerHTML = categories.map(c => `
+    <option value="${c}">${c}</option>
+  `).join('');
+}
+
+function handleSalesCashbookSubmit(e) {
+  e.preventDefault();
+
+  const type = document.getElementById('salesTxnType').value;
+  const voucherNo = document.getElementById('salesTxnVoucher').value.trim();
+  const category = document.getElementById('salesTxnCategory').value;
+  const busNo = document.getElementById('salesTxnBus').value;
+  const amount = parseFloat(document.getElementById('salesTxnAmount').value) || 0;
+  const paymentMethod = document.getElementById('salesTxnMethod').value;
+  const description = document.getElementById('salesTxnDescription').value.trim();
+
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+  const newTxn = {
+    id: `TXN-${Date.now().toString().slice(-6)}`,
+    date: "2026-09-28",
+    time: timeStr,
+    type,
+    category,
+    counterId: salesState.activeCounter.id,
+    counterName: salesState.activeCounter.name,
+    busNo,
+    voucherNo,
+    amount,
+    paymentMethod,
+    description,
+    recordedBy: salesState.user.name || salesState.activeCounter.manager
+  };
+
+  saveStoredTransaction(newTxn);
+  closeSalesCashbookModal();
+  showToast(`ক্যাশবুক ভাউচার ${voucherNo} সংরক্ষিত হয়েছে!`, 'success');
+  renderSalesContent();
+}
+
+function deleteSalesCashbookTxn(id) {
+  if (confirm("আপনি কি নিশ্চিতভাবে এই ক্যাশবুক ভাউচারটি মুছে ফেলতে চান?")) {
+    deleteStoredTransaction(id);
+    showToast("ভাউচার মুছে ফেলা হয়েছে!", "info");
+    renderSalesContent();
+  }
 }
 
 // Start

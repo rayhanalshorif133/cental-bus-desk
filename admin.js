@@ -9,7 +9,13 @@ let adminState = {
   trips: [],
   selectedCounterFilter: "all",
   searchQuery: "",
-  activeTab: "overview"
+  activeTab: "overview",
+  financeFilter: {
+    counter: "all",
+    type: "all",
+    category: "all",
+    search: ""
+  }
 };
 
 function initAdminDashboard() {
@@ -282,6 +288,8 @@ function renderAdminContent() {
 
   } else if (adminState.activeTab === 'performance') {
     renderAdminPerformanceReport();
+  } else if (adminState.activeTab === 'finance') {
+    renderAdminFinanceModule();
   }
 }
 
@@ -598,6 +606,450 @@ function renderAdminPerformanceReport() {
       </div>
     </div>
   `;
+}
+
+// -------------------------------------------------------------
+// MODULE 4: COMPANY INCOME & EXPENSE AUDIT
+// -------------------------------------------------------------
+function renderAdminFinanceModule() {
+  const container = document.getElementById('adminMainArea');
+  if (!container) return;
+
+  const summary = calculateFinancialSummary();
+  const allTxns = getStoredTransactions();
+
+  // Apply filters
+  const f = adminState.financeFilter;
+  const filteredTxns = allTxns.filter(t => {
+    if (f.counter !== 'all') {
+      if (t.counterId !== parseInt(f.counter)) return false;
+    }
+    if (f.type !== 'all') {
+      if (t.type !== f.type) return false;
+    }
+    if (f.category !== 'all') {
+      if (t.category !== f.category) return false;
+    }
+    if (f.search) {
+      const q = f.search.toLowerCase();
+      const match = (t.voucherNo && t.voucherNo.toLowerCase().includes(q)) ||
+                    (t.description && t.description.toLowerCase().includes(q)) ||
+                    (t.busNo && t.busNo.toLowerCase().includes(q)) ||
+                    (t.counterName && t.counterName.toLowerCase().includes(q)) ||
+                    (t.recordedBy && t.recordedBy.toLowerCase().includes(q));
+      if (!match) return false;
+    }
+    return true;
+  });
+
+  // Calculate filtered totals
+  const fIncome = filteredTxns.filter(t => t.type === 'Income').reduce((s, t) => s + Number(t.amount || 0), 0);
+  const fExpense = filteredTxns.filter(t => t.type === 'Expense').reduce((s, t) => s + Number(t.amount || 0), 0);
+  const fNet = fIncome - fExpense;
+
+  // Counter comparison data
+  const counterRows = [
+    { id: 0, name: "সেন্ট্রাল হেডকোয়ার্টার (Central HQ)", city: "ঢাকা প্রধান কার্যালয়" },
+    ...adminState.counters
+  ].map(c => {
+    const cTxns = allTxns.filter(t => t.counterId === c.id);
+    const inc = cTxns.filter(t => t.type === 'Income').reduce((s, t) => s + Number(t.amount || 0), 0);
+    const exp = cTxns.filter(t => t.type === 'Expense').reduce((s, t) => s + Number(t.amount || 0), 0);
+    const net = inc - exp;
+    const isProfit = net >= 0;
+
+    return `
+      <tr class="hover:bg-slate-50 transition">
+        <td class="py-3 px-4">
+          <div class="font-bold text-slate-900">${c.name}</div>
+          <div class="text-[11px] text-slate-400">${c.city || ''}</div>
+        </td>
+        <td class="py-3 px-4 text-center">
+          <span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">
+            ${cTxns.length} টি ভাউচার
+          </span>
+        </td>
+        <td class="py-3 px-4 text-right font-bold text-emerald-600">
+          ৳ ${inc.toLocaleString()}
+        </td>
+        <td class="py-3 px-4 text-right font-bold text-rose-600">
+          ৳ ${exp.toLocaleString()}
+        </td>
+        <td class="py-3 px-4 text-right">
+          <span class="inline-flex items-center gap-1 font-black ${isProfit ? 'text-indigo-600' : 'text-amber-600'}">
+            ${isProfit ? '+' : ''}৳ ${net.toLocaleString()}
+          </span>
+        </td>
+        <td class="py-3 px-4 text-center">
+          <button 
+            onclick="adminState.financeFilter.counter = '${c.id}'; renderAdminFinanceModule();"
+            class="text-[11px] font-bold text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-lg transition"
+          >
+            অডিট দেখুন
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  // Transactions rows
+  const txnRows = filteredTxns.length === 0 ? `
+    <tr>
+      <td colspan="8" class="text-center py-10 text-slate-400 text-xs">
+        <i class="fas fa-receipt text-3xl mb-2 text-slate-300 block"></i>
+        কোনো লেনদেন রেকর্ড পাওয়া যায়নি।
+      </td>
+    </tr>
+  ` : filteredTxns.map(t => {
+    const isIncome = t.type === 'Income';
+    return `
+      <tr class="hover:bg-slate-50/80 transition text-xs">
+        <td class="py-3 px-4 font-mono font-bold text-slate-800">
+          <div>${t.voucherNo || t.id}</div>
+          <div class="text-[10px] text-slate-400 font-sans">${t.date} ${t.time || ''}</div>
+        </td>
+        <td class="py-3 px-4 font-medium text-slate-700">
+          <span class="px-2 py-0.5 rounded-md font-bold text-[10px] ${t.counterId === 0 ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'}">
+            ${t.counterName || 'কাউন্টার'}
+          </span>
+        </td>
+        <td class="py-3 px-4">
+          <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold ${isIncome ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-rose-100 text-rose-800 border border-rose-200'}">
+            <i class="fas ${isIncome ? 'fa-arrow-down' : 'fa-arrow-up'}"></i>
+            ${isIncome ? 'আয় (Credit)' : 'ব্যয় (Debit)'}
+          </span>
+        </td>
+        <td class="py-3 px-4 font-semibold text-slate-800">
+          ${t.category}
+          ${t.busNo && t.busNo !== 'N/A' ? `<span class="block text-[10px] text-slate-400 font-mono mt-0.5"><i class="fas fa-bus mr-1"></i>${t.busNo}</span>` : ''}
+        </td>
+        <td class="py-3 px-4 text-slate-600 max-w-xs">
+          <p class="truncate" title="${t.description}">${t.description}</p>
+          <span class="text-[10px] text-slate-400 font-medium">পদ্ধতি: ${t.paymentMethod || 'Cash'}</span>
+        </td>
+        <td class="py-3 px-4 text-right font-black text-sm ${isIncome ? 'text-emerald-700' : 'text-rose-700'}">
+          ${isIncome ? '+' : '-'} ৳ ${Number(t.amount).toLocaleString()}
+        </td>
+        <td class="py-3 px-4 text-slate-500 text-[11px]">
+          <i class="fas fa-user-pen mr-1 text-slate-400"></i> ${t.recordedBy || 'Admin'}
+        </td>
+        <td class="py-3 px-4 text-center">
+          <button 
+            onclick="deleteAdminTxn('${t.id}')"
+            title="ভাউচার মুছুন"
+            class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-rose-100 text-slate-400 hover:text-rose-600 transition inline-flex items-center justify-center text-xs"
+          >
+            <i class="fas fa-trash-can"></i>
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  container.innerHTML = `
+    <div class="space-y-6">
+      
+      <!-- Top Header Card -->
+      <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-xl font-black text-slate-900 flex items-center gap-2">
+            <i class="fas fa-coins text-amber-500"></i>
+            কোম্পানি সার্বিক আয় ও ব্যয় অডিট (Company Financial & Cashflow Audit)
+          </h2>
+          <p class="text-xs text-slate-500 mt-1">
+            ১০টি কাউন্টার ও সেন্ট্রাল হেডকোয়ার্টারের টিকেট সেলস, ফুয়েল স্লিপ, টোল ও অপারেটিং খরচের পূর্ণ হিসাব
+          </p>
+        </div>
+
+        <div class="flex items-center gap-2 self-start sm:self-auto">
+          <button 
+            onclick="printAdminFinanceReport()" 
+            class="px-3.5 py-2 rounded-xl border border-slate-200 hover:border-slate-300 text-slate-700 bg-slate-50 hover:bg-slate-100 text-xs font-bold transition flex items-center gap-1.5"
+          >
+            <i class="fas fa-print"></i> অডিট প্রিন্ট
+          </button>
+          <button 
+            onclick="openAdminTxnModal()" 
+            class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-md shadow-indigo-200 transition flex items-center gap-2"
+          >
+            <i class="fas fa-plus"></i> নতুন আয়/ব্যয় ভাউচার
+          </button>
+        </div>
+      </div>
+
+      <!-- Financial Metrics Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs">
+          <div class="flex items-center justify-between text-slate-400">
+            <span class="text-[11px] font-bold uppercase tracking-wider">মোট রাজস্ব আয় (Revenue)</span>
+            <span class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm"><i class="fas fa-arrow-trend-up"></i></span>
+          </div>
+          <div class="mt-2">
+            <h3 class="text-2xl font-black text-emerald-700">৳ ${summary.totalIncome.toLocaleString()}</h3>
+            <p class="text-[11px] text-slate-500 mt-0.5">${summary.incomeCount} টি কালেকশন রসিদ</p>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs">
+          <div class="flex items-center justify-between text-slate-400">
+            <span class="text-[11px] font-bold uppercase tracking-wider">মোট পরিচালন ব্যয় (Expense)</span>
+            <span class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center text-sm"><i class="fas fa-arrow-trend-down"></i></span>
+          </div>
+          <div class="mt-2">
+            <h3 class="text-2xl font-black text-rose-700">৳ ${summary.totalExpense.toLocaleString()}</h3>
+            <p class="text-[11px] text-slate-500 mt-0.5">ফুয়েল, টোল, খোরাকি ও অফিস ব্যয়</p>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs">
+          <div class="flex items-center justify-between text-slate-400">
+            <span class="text-[11px] font-bold uppercase tracking-wider">সার্বিক নীট মুনাফা (Net Profit)</span>
+            <span class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center text-sm"><i class="fas fa-wallet"></i></span>
+          </div>
+          <div class="mt-2">
+            <h3 class="text-2xl font-black text-indigo-700">৳ ${summary.netProfit.toLocaleString()}</h3>
+            <p class="text-[11px] text-emerald-600 font-bold mt-0.5 flex items-center gap-1">
+              <i class="fas fa-circle-check"></i> প্রফিট মার্জিন: ${summary.margin}%
+            </p>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs">
+          <div class="flex items-center justify-between text-slate-400">
+            <span class="text-[11px] font-bold uppercase tracking-wider">বর্তমান ফিল্টার স্থিতি</span>
+            <span class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-sm"><i class="fas fa-filter"></i></span>
+          </div>
+          <div class="mt-2">
+            <h3 class="text-2xl font-black text-slate-900">${filteredTxns.length} টি ভাউচার</h3>
+            <p class="text-[11px] text-slate-500 mt-0.5">
+              ফিল্টার্ড ব্যালেন্স: <strong class="${fNet >= 0 ? 'text-indigo-600' : 'text-amber-600'}">৳ ${fNet.toLocaleString()}</strong>
+            </p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Counter-wise Profitability Table -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+          <div>
+            <h3 class="text-sm font-black text-slate-900 flex items-center gap-2">
+              <i class="fas fa-building-columns text-indigo-600"></i>
+              ১০টি কাউন্টার ও হেডকোয়ার্টার ভিত্তিক প্রফিট্যাবিলিটি সামারি
+            </h3>
+            <p class="text-xs text-slate-500">কোন কাউন্টার কত টাকা রাজস্ব সংগ্রহ করেছে এবং কত খরচ হয়েছে</p>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead>
+              <tr class="text-[11px] uppercase font-bold text-slate-400 bg-slate-50 border-b border-slate-200">
+                <th class="py-2.5 px-4">শাখা / কাউন্টার</th>
+                <th class="py-2.5 px-4 text-center">ভাউচার সংখ্যা</th>
+                <th class="py-2.5 px-4 text-right">মোট আয় (Inflow)</th>
+                <th class="py-2.5 px-4 text-right">মোট ব্যয় (Outflow)</th>
+                <th class="py-2.5 px-4 text-right">নীট স্থিতি (Net Cash)</th>
+                <th class="py-2.5 px-4 text-center">অ্যাকশন</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              ${counterRows}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Filter Controls Bar -->
+      <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div class="flex flex-wrap items-center gap-2 flex-1">
+          
+          <!-- Search -->
+          <div class="relative min-w-[200px] flex-1 sm:flex-none">
+            <i class="fas fa-search absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+            <input 
+              type="text" 
+              placeholder="ভাউচার, বিবরণ বা বাস নং..." 
+              value="${f.search}"
+              oninput="adminState.financeFilter.search = this.value; renderAdminFinanceModule();"
+              class="w-full pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:border-indigo-600"
+            />
+          </div>
+
+          <!-- Type Filter -->
+          <select 
+            onchange="adminState.financeFilter.type = this.value; renderAdminFinanceModule();"
+            class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 font-bold outline-none text-slate-700"
+          >
+            <option value="all" ${f.type === 'all' ? 'selected' : ''}>সকল ধরণ (All Types)</option>
+            <option value="Income" ${f.type === 'Income' ? 'selected' : ''}>শুধু আয় (Income)</option>
+            <option value="Expense" ${f.type === 'Expense' ? 'selected' : ''}>শুধু ব্যয় (Expense)</option>
+          </select>
+
+          <!-- Counter Filter -->
+          <select 
+            onchange="adminState.financeFilter.counter = this.value; renderAdminFinanceModule();"
+            class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 font-semibold outline-none text-slate-700"
+          >
+            <option value="all" ${f.counter === 'all' ? 'selected' : ''}>সকল শাখা / কাউন্টার (১০টি)</option>
+            <option value="0" ${f.counter === '0' ? 'selected' : ''}>সেন্ট্রাল হেডকোয়ার্টার (HQ)</option>
+            ${adminState.counters.map(c => `
+              <option value="${c.id}" ${f.counter === String(c.id) ? 'selected' : ''}>${c.id}. ${c.name}</option>
+            `).join('')}
+          </select>
+
+          <!-- Category Filter -->
+          <select 
+            onchange="adminState.financeFilter.category = this.value; renderAdminFinanceModule();"
+            class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 font-semibold outline-none text-slate-700 max-w-[180px]"
+          >
+            <option value="all" ${f.category === 'all' ? 'selected' : ''}>সকল খাত (Categories)</option>
+            <optgroup label="আয়ের খাত সমূহ">
+              ${INCOME_CATEGORIES.map(cat => `<option value="${cat}" ${f.category === cat ? 'selected' : ''}>${cat}</option>`).join('')}
+            </optgroup>
+            <optgroup label="ব্যয়ের খাত সমূহ">
+              ${EXPENSE_CATEGORIES.map(cat => `<option value="${cat}" ${f.category === cat ? 'selected' : ''}>${cat}</option>`).join('')}
+            </optgroup>
+          </select>
+
+          <!-- Reset Filter -->
+          ${(f.counter !== 'all' || f.type !== 'all' || f.category !== 'all' || f.search) ? `
+            <button 
+              onclick="adminState.financeFilter = { counter: 'all', type: 'all', category: 'all', search: '' }; renderAdminFinanceModule();"
+              class="px-2.5 py-1.5 text-xs text-rose-600 hover:bg-rose-50 rounded-xl font-bold transition flex items-center gap-1"
+            >
+              <i class="fas fa-rotate-left"></i> রিসেট
+            </button>
+          ` : ''}
+
+        </div>
+
+        <div class="text-xs font-bold text-slate-500 whitespace-nowrap">
+          মোট রেকর্ড: <span class="text-indigo-600">${filteredTxns.length}</span> টি
+        </div>
+      </div>
+
+      <!-- Transaction Audit Ledger Table -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+          <h3 class="text-sm font-black text-slate-900 flex items-center gap-2">
+            <i class="fas fa-file-invoice-dollar text-indigo-600"></i>
+            সারাদেশের আয়-ব্যয় লেনদেন অডিট লেজার (Audit General Ledger)
+          </h3>
+          <span class="text-xs text-slate-400">সর্বশেষ আপডেট: আজকের লাইভ ট্রানজেকশন</span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left">
+            <thead>
+              <tr class="text-[11px] uppercase font-extrabold text-slate-400 bg-slate-50 border-b border-slate-200">
+                <th class="py-3 px-4">ভাউচার ও সময়</th>
+                <th class="py-3 px-4">কাউন্টার / শাখা</th>
+                <th class="py-3 px-4">ধরণ</th>
+                <th class="py-3 px-4">খাত ও বাস নং</th>
+                <th class="py-3 px-4">বিবরণ ও মাধ্যম</th>
+                <th class="py-3 px-4 text-right">টাকা (BDT)</th>
+                <th class="py-3 px-4">এন্ট্রি প্রদানকারী</th>
+                <th class="py-3 px-4 text-center">মুছুন</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              ${txnRows}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  `;
+}
+
+function openAdminTxnModal() {
+  const modal = document.getElementById('adminTxnModal');
+  if (!modal) return;
+
+  const voucherInput = document.getElementById('adminTxnVoucher');
+  if (voucherInput) {
+    voucherInput.value = `VR-${Math.floor(100 + Math.random() * 900)}`;
+  }
+
+  onAdminTxnTypeChange();
+  modal.classList.remove('hidden');
+}
+
+function closeAdminTxnModal() {
+  const modal = document.getElementById('adminTxnModal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function onAdminTxnTypeChange() {
+  const typeSelect = document.getElementById('adminTxnType');
+  const catSelect = document.getElementById('adminTxnCategory');
+  if (!typeSelect || !catSelect) return;
+
+  const isIncome = typeSelect.value === 'Income';
+  const categories = isIncome ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
+
+  catSelect.innerHTML = categories.map(c => `
+    <option value="${c}">${c}</option>
+  `).join('');
+}
+
+function handleAdminTxnSubmit(e) {
+  e.preventDefault();
+
+  const type = document.getElementById('adminTxnType').value;
+  const voucherNo = document.getElementById('adminTxnVoucher').value.trim();
+  const counterId = parseInt(document.getElementById('adminTxnCounter').value);
+  const category = document.getElementById('adminTxnCategory').value;
+  const amount = parseFloat(document.getElementById('adminTxnAmount').value) || 0;
+  const paymentMethod = document.getElementById('adminTxnPaymentMethod').value;
+  const busNo = document.getElementById('adminTxnBusNo').value.trim() || 'N/A';
+  const description = document.getElementById('adminTxnDescription').value.trim();
+
+  let counterName = "সেন্ট্রাল হেডকোয়ার্টার (Central HQ)";
+  if (counterId > 0) {
+    const counterObj = adminState.counters.find(c => c.id === counterId);
+    if (counterObj) counterName = counterObj.name;
+  }
+
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+  const newTxn = {
+    id: `TXN-${Date.now().toString().slice(-6)}`,
+    date: "2026-09-28",
+    time: timeStr,
+    type,
+    category,
+    counterId,
+    counterName,
+    busNo,
+    voucherNo,
+    amount,
+    paymentMethod,
+    description,
+    recordedBy: adminState.user.name || "Super Admin HQ"
+  };
+
+  saveStoredTransaction(newTxn);
+  closeAdminTxnModal();
+  renderAdminMetrics();
+  renderAdminFinanceModule();
+  alert(`ভাউচার ${voucherNo} সফলভাবে সংরক্ষিত হয়েছে!`);
+}
+
+function deleteAdminTxn(id) {
+  if (confirm("আপনি কি নিশ্চিতভাবে এই লেনদেন ভাউচারটি মুছে ফেলতে চান?")) {
+    deleteStoredTransaction(id);
+    renderAdminMetrics();
+    renderAdminFinanceModule();
+  }
+}
+
+function printAdminFinanceReport() {
+  window.print();
 }
 
 // Start

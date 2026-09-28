@@ -118,6 +118,46 @@ def capture_screenshots():
         page.wait_for_timeout(800)
         page.screenshot(path=os.path.join(output_dir, "08_sales_manifest.png"))
 
+        # -------------------------------------------------------------
+        # Screenshot 9: Super Admin Income & Expense Financial Audit
+        # -------------------------------------------------------------
+        print("Capturing Super Admin Income & Expense Module...")
+        page.evaluate("""() => {
+            localStorage.setItem('bus_auth_token', 'token_admin');
+            localStorage.setItem('bus_user_v1', JSON.stringify({
+                id: 'admin',
+                role: 'admin',
+                name: 'Central Control HQ',
+                email: 'admin@buscentral.com'
+            }));
+        }""")
+        page.goto(admin_url)
+        page.wait_for_timeout(1000)
+        page.evaluate("switchAdminTab('finance')")
+        page.wait_for_timeout(1000)
+        page.screenshot(path=os.path.join(output_dir, "09_admin_finance_audit.png"))
+
+        # -------------------------------------------------------------
+        # Screenshot 10: Counter Sales Daily Cashbook (Fuel/Toll/Parcel)
+        # -------------------------------------------------------------
+        print("Capturing Counter Sales Daily Cashbook...")
+        page.evaluate("""() => {
+            localStorage.setItem('bus_auth_token', 'token_sales');
+            localStorage.setItem('bus_user_v1', JSON.stringify({
+                id: 'sales-2',
+                role: 'sales',
+                counterId: 2,
+                name: 'Kamal Hossain',
+                counterName: 'Sayedabad Counter',
+                email: 'sayedabad@buscentral.com'
+            }));
+        }""")
+        page.goto(sales_url)
+        page.wait_for_timeout(1000)
+        page.evaluate("switchSalesTab('cashbook')")
+        page.wait_for_timeout(1000)
+        page.screenshot(path=os.path.join(output_dir, "10_sales_cashbook.png"))
+
         browser.close()
         print("All screenshots successfully captured in:", output_dir)
 
